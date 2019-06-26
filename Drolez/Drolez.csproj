@@ -6,7 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.1.1" />
+    <PackageReference Include="Discord.Net" Version="2.1.1">
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="WebSocketServer" Version="1.0.8">
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

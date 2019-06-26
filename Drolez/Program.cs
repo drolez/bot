@@ -3,7 +3,10 @@
     using Discord;
     using Discord.WebSocket;
     using System;
+    using System.Linq;
+    using System.Net;
     using System.Net.WebSockets;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Xml;
 
@@ -18,6 +21,11 @@
         internal static string BotName = string.Empty;
 
         /// <summary>
+        /// Web sockets server
+        /// </summary>
+        internal static WebSockets.WebSocketServer Server = null;
+
+        /// <summary>
         /// Secret token. Shhh!
         /// </summary>
         internal static string Token = string.Empty;
@@ -25,7 +33,7 @@
         /// <summary>
         /// Discord client
         /// </summary>
-        private DiscordSocketClient client;
+        private static DiscordSocketClient client;
 
         /// <summary>
         /// Entry point
@@ -59,8 +67,26 @@
                 return;
             }
 
+            // Setup web sockets server
+            Program.Server = new WebSockets.WebSocketServer();
+            Program.Server.Connected += (sender, socket) =>
+            {
+                new Thread(() =>
+                {
+                    while (socket.State < WebSocketState.Closed)
+                    {
+                        Program.DoSocketStuff(socket);
+                    }
+                }).Start();
+            };
+
+            // Start websockets
+            Program.Server.Bind(new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 4555));
+            Program.Server.StartAccept();
+
             // Start bot
             new Program().MainAsync(args).GetAwaiter().GetResult();
+            Program.Server.Dispose();
         }
 
         /// <summary>
@@ -70,15 +96,26 @@
         /// <returns>Task result</returns>
         public async Task MainAsync(string[] args)
         {
-            this.client = new DiscordSocketClient();
-            this.client.Log += this.Log;
+            Program.client = new DiscordSocketClient();
+            Program.client.Log += this.Log;
 
-            await this.client.LoginAsync(TokenType.Bot, Program.Token);
-            await this.client.StartAsync();
-
-
+            await Program.client.LoginAsync(TokenType.Bot, Program.Token);
+            await Program.client.StartAsync();
 
             await Task.Delay(-1);
+        }
+
+        /// <summary>
+        /// This does socket stuff, when socket stuff happens
+        /// </summary>
+        /// <param name="socket">Web socket</param>
+        private static void DoSocketStuff(WebSocket socket)
+        {
+            ArraySegment<byte> buffer = new ArraySegment<byte>();
+            socket.ReceiveAsync(buffer, new CancellationToken()).GetAwaiter().GetResult();
+
+            string text = new string(buffer.Select(part => (char)part).ToArray());
+            Program.client.Guilds.First().TextChannels.First().SendMessageAsync(text);
         }
 
         /// <summary>
