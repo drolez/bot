@@ -3,7 +3,6 @@
     using Discord;
     using Discord.WebSocket;
     using System;
-    using System.Linq;
     using System.Net;
     using System.Net.WebSockets;
     using System.Threading;
@@ -16,9 +15,9 @@
     public class Program
     {
         /// <summary>
-        /// Name of the bot in discord
+        /// Discord client
         /// </summary>
-        internal static string BotName = string.Empty;
+        internal static DiscordSocketClient DiscordClient;
 
         /// <summary>
         /// Web sockets server
@@ -29,11 +28,6 @@
         /// Secret token. Shhh!
         /// </summary>
         internal static string Token = string.Empty;
-
-        /// <summary>
-        /// Discord client
-        /// </summary>
-        private static DiscordSocketClient client;
 
         /// <summary>
         /// Entry point
@@ -50,11 +44,7 @@
                 foreach (XmlNode config in document.SelectSingleNode("/settings"))
                 {
                     // Read config nodes
-                    if (config.Name == "BotName")
-                    {
-                        Program.BotName = config.InnerText;
-                    }
-                    else if (config.Name == "Token")
+                    if (config.Name == "Token")
                     {
                         Program.Token = config.InnerText;
                     }
@@ -73,15 +63,19 @@
             {
                 new Thread(() =>
                 {
+                    Console.WriteLine("OH someones there!");
+
                     while (socket.State < WebSocketState.Closed)
                     {
                         Program.DoSocketStuff(socket);
                     }
+
+                    CommandHandler.ClientRemove(socket);
                 }).Start();
             };
 
             // Start websockets
-            Program.Server.Bind(new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 4555));
+            Program.Server.Bind(new IPEndPoint(new IPAddress(new byte[] { 192, 168, 1, 3 }), 4555));
             Program.Server.StartAccept();
 
             // Start bot
@@ -96,11 +90,11 @@
         /// <returns>Task result</returns>
         public async Task MainAsync(string[] args)
         {
-            Program.client = new DiscordSocketClient();
-            Program.client.Log += this.Log;
+            Program.DiscordClient = new DiscordSocketClient();
+            Program.DiscordClient.Log += this.Log;
 
-            await Program.client.LoginAsync(TokenType.Bot, Program.Token);
-            await Program.client.StartAsync();
+            await Program.DiscordClient.LoginAsync(TokenType.Bot, Program.Token);
+            await Program.DiscordClient.StartAsync();
 
             await Task.Delay(-1);
         }
@@ -111,11 +105,37 @@
         /// <param name="socket">Web socket</param>
         private static void DoSocketStuff(WebSocket socket)
         {
-            ArraySegment<byte> buffer = new ArraySegment<byte>();
-            socket.ReceiveAsync(buffer, new CancellationToken()).GetAwaiter().GetResult();
+            string command = socket.Recieve();
 
-            string text = new string(buffer.Select(part => (char)part).ToArray());
-            Program.client.Guilds.First().TextChannels.First().SendMessageAsync(text);
+            if (command.StartsWith("register/") && command.Length > 9)
+            {
+                string userId = command.Substring(9);
+                ulong id = 0;
+                ulong.TryParse(userId, out id);
+
+                if (id > 0)
+                {
+                    SocketUser user = Program.DiscordClient.GetUser(id);
+
+                    if (user != null)
+                    {
+                        CommandHandler.ClientAdd(socket, user);
+                        socket.Send("true");
+                    }
+                    else
+                    {
+                        socket.Send("false");
+                    }
+                }
+            }
+            else if (!CommandHandler.IsRegistered(socket) || string.IsNullOrWhiteSpace(command))
+            {
+                socket.Send(command == null ? "ERR:Recieve error, Check logs!" : "ERR:Invalid!");
+            }
+            else
+            {
+                CommandHandler.ProcessCommand(socket, command);
+            }
         }
 
         /// <summary>
