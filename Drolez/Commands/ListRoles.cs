@@ -43,7 +43,7 @@
 
             ulong userId = 0;
 
-            if (parameters.Length > 0 && string.IsNullOrWhiteSpace(parameters[1]) && ulong.TryParse(parameters[1], out userId))
+            if (parameters.Length > 1 && string.IsNullOrWhiteSpace(parameters[1]) && ulong.TryParse(parameters[1], out userId))
             {
                 // List roles for specific user
                 socket.Send(guild.GetUser(userId).Roles.Select(role => new Wrappers.Role(role)).ToJSON());

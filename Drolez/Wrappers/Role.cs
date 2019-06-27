@@ -2,8 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
     using DNET = Discord;
     using DW = Discord.WebSocket;
 
@@ -21,20 +19,14 @@
         {
             this.Identifier = role.Id;
             this.Name = role.Name;
-            this.Color = new byte[3] { role.Color.R, role.Color.G, role.Color.B };
-
-            // Add permissions
-            this.Permissions = new List<Tuple<string, bool>>();
-            this.Permissions.AddRange(
-                role.Permissions.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(property => property.PropertyType == typeof(bool))
-                .Select(property => new Tuple<string, bool>(property.Name, (bool)property.GetValue(role.Permissions))));
+            this.Color = new List<int> { role.Color.R, role.Color.G, role.Color.B };
+            this.Permissions = role.Permissions;
         }
 
         /// <summary>
         /// Gets or sets role color
         /// </summary>
-        public byte[] Color { get; set; }
+        public List<int> Color { get; set; }
 
         /// <summary>
         /// Gets or sets identifier
@@ -49,6 +41,6 @@
         /// <summary>
         /// Gets or sets permissions
         /// </summary>
-        private List<Tuple<string, bool>> Permissions { get; set; }
+        public DNET.GuildPermissions Permissions { get; set; }
     }
 }

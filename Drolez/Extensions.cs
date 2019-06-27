@@ -15,7 +15,52 @@ namespace Drolez
         /// <summary>
         /// 1MB web socket buffer
         /// </summary>
-        private const int WebSocketBufferSize = 256 * 1024;
+        private const int WebSocketBufferSize = 1024 * 1024;
+
+        #region Debug
+
+        /// <summary>
+        /// Max length of debug output
+        /// </summary>
+        private const int MaxDebugLength = 50;
+
+        private static TimeSpan debugCooldown = TimeSpan.FromSeconds(10);
+
+        private static DateTime debugLastSendIN = DateTime.Now;
+        private static DateTime debugLastSendOUT = DateTime.Now;
+
+        /// <summary>
+        /// Test channel, DEBUG out <!---------------------------------------------------------------------------------------------------- Will nuke later-->
+        /// </summary>
+        /// <param name="input">The input</param>
+        /// <param name="message">The message</param>
+        private static void XDEBUGOUT(bool input, string message)
+        {
+            if (DateTime.Now > (input? debugLastSendIN + debugCooldown : debugLastSendOUT + debugCooldown))
+            {
+                if (input)
+                {
+                    debugLastSendIN = DateTime.Now;
+                }
+                else
+                {
+                    debugLastSendOUT = DateTime.Now;
+                }
+
+                string messageResult = message;
+
+                if (messageResult.Length > Extensions.MaxDebugLength)
+                {
+                    messageResult = message.Substring(0, Math.Min(message.Length, Extensions.MaxDebugLength)) + "...";
+                }
+
+                ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890))
+                    .SendMessageAsync((input ? "IN" : "OUT:") + message.Length + "> " + messageResult);
+            }
+        }
+
+
+        #endregion
 
         /// <summary>
         /// Get array field
@@ -52,7 +97,7 @@ namespace Drolez
                 string message = new string(buffer.ToArray().Where(part => part > 0).Select(part => (char)part).ToArray());
 
                 // Test channel, DEBUG out <---------------------------------------------------------------------------------------------------- Will nuke later
-                ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890)).SendMessageAsync("IN:" + message.Length + "> " + message);
+                Extensions.XDEBUGOUT(true, message);
 
                 return message;
             }
@@ -75,7 +120,7 @@ namespace Drolez
             socket.SendAsync(message.ToSegment(), WebSocketMessageType.Text, true, token);
 
             // Test channel, DEBUG out <---------------------------------------------------------------------------------------------------- Will nuke later
-            ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890)).SendMessageAsync("OUT:" + message.Length + "> " + message);
+            Extensions.XDEBUGOUT(false, message);
         }
 
         /// <summary>
@@ -97,5 +142,6 @@ namespace Drolez
         {
             return new ArraySegment<byte>(text.Select(letter => (byte)letter).ToArray());
         }
+
     }
 }

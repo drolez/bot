@@ -121,7 +121,7 @@ namespace Drolez
                 return;
             }
 
-            if (command.StartsWith("register/") && command.Length > 9)
+            if (command.StartsWith("register/") && command.Length > 9 && !CommandHandler.IsRegistered(socket))
             {
                 string userId = command.Substring(9);
                 ulong id = 0;
@@ -142,7 +142,7 @@ namespace Drolez
                     }
                 }
             }
-            else if (!CommandHandler.IsRegistered(socket) || string.IsNullOrWhiteSpace(command))
+            else if (!CommandHandler.IsRegistered(socket) || command.StartsWith("register/") || string.IsNullOrWhiteSpace(command))
             {
                 socket.Send(command == null ? "ERR:Recieve error, Check logs!" : "ERR:Invalid!");
             }
