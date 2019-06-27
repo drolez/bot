@@ -1,13 +1,13 @@
-﻿namespace Drolez
+namespace Drolez
 {
-    using Discord;
-    using Discord.WebSocket;
     using System;
     using System.Net;
     using System.Net.WebSockets;
-    using System.Threading;
+    using System.Security.Cryptography.X509Certificates;
     using System.Threading.Tasks;
     using System.Xml;
+    using DNET = Discord;
+    using DW = Discord.WebSocket;
 
     /// <summary>
     /// Program entry class
@@ -15,19 +15,29 @@
     public class Program
     {
         /// <summary>
-        /// Discord client
+        /// Gets certificate password
         /// </summary>
-        internal static DiscordSocketClient DiscordClient;
+        internal static string CertificatePassword { get; private set; } = string.Empty;
 
         /// <summary>
-        /// Web sockets server
+        /// Gets certificate file path
         /// </summary>
-        internal static WebSockets.WebSocketServer Server = null;
+        internal static string CertificatePath { get; private set; } = string.Empty;
 
         /// <summary>
-        /// Secret token. Shhh!
+        /// Gets Discord client
         /// </summary>
-        internal static string Token = string.Empty;
+        internal static DW.DiscordSocketClient DiscordClient { get; private set; }
+
+        /// <summary>
+        /// Gets web sockets server
+        /// </summary>
+        internal static WebSocketsServer Server { get; private set; } = null;
+
+        /// <summary>
+        /// Gets secret token. Shhh!
+        /// </summary>
+        internal static string Token { get; private set; } = string.Empty;
 
         /// <summary>
         /// Entry point
@@ -35,6 +45,8 @@
         /// <param name="args">App arguments</param>
         public static void Main(string[] args)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
             // Read config stuff
             try
             {
@@ -48,6 +60,18 @@
                     {
                         Program.Token = config.InnerText;
                     }
+
+                    // Read config nodes
+                    if (config.Name == "CertificatePath")
+                    {
+                        Program.CertificatePath = config.InnerText;
+                    }
+
+                    // Read config nodes
+                    if (config.Name == "CertificatePassword")
+                    {
+                        Program.CertificatePassword = config.InnerText;
+                    }
                 }
             }
             catch (Exception ex)
@@ -57,29 +81,14 @@
                 return;
             }
 
-            // Setup web sockets server
-            Program.Server = new WebSockets.WebSocketServer();
-            Program.Server.Connected += (sender, socket) =>
-            {
-                new Thread(() =>
-                {
-                    Console.WriteLine("OH someones there!");
-
-                    while (socket.State < WebSocketState.Closed)
-                    {
-                        Program.DoSocketStuff(socket);
-                    }
-
-                    CommandHandler.ClientRemove(socket);
-                }).Start();
-            };
-
-            // Start websockets
-            Program.Server.Bind(new IPEndPoint(new IPAddress(new byte[] { 192, 168, 1, 3 }), 4555));
-            Program.Server.StartAccept();
+            // Setup environment
+            CommandHandler.LoadCommands();
+            Program.SetupWebSockets();
 
             // Start bot
             new Program().MainAsync(args).GetAwaiter().GetResult();
+
+            // Stop server
             Program.Server.Dispose();
         }
 
@@ -90,10 +99,10 @@
         /// <returns>Task result</returns>
         public async Task MainAsync(string[] args)
         {
-            Program.DiscordClient = new DiscordSocketClient();
+            Program.DiscordClient = new DW.DiscordSocketClient();
             Program.DiscordClient.Log += this.Log;
 
-            await Program.DiscordClient.LoginAsync(TokenType.Bot, Program.Token);
+            await Program.DiscordClient.LoginAsync(DNET.TokenType.Bot, Program.Token);
             await Program.DiscordClient.StartAsync();
 
             await Task.Delay(-1);
@@ -105,7 +114,12 @@
         /// <param name="socket">Web socket</param>
         private static void DoSocketStuff(WebSocket socket)
         {
-            string command = socket.Recieve();
+            string command = socket.Receive();
+
+            if (command == null)
+            {
+                return;
+            }
 
             if (command.StartsWith("register/") && command.Length > 9)
             {
@@ -115,7 +129,7 @@
 
                 if (id > 0)
                 {
-                    SocketUser user = Program.DiscordClient.GetUser(id);
+                    DW.SocketUser user = Program.DiscordClient.GetUser(id);
 
                     if (user != null)
                     {
@@ -134,8 +148,53 @@
             }
             else
             {
-                CommandHandler.ProcessCommand(socket, command);
+                try
+                {
+                    CommandHandler.ProcessCommand(socket, command);
+                }
+                catch (Exception ex)
+                {
+                    socket.Send("ERR:" + ex.Message.ToString());
+                }
             }
+        }
+
+        /// <summary>
+        /// Setup web sockets server
+        /// </summary>
+        private static void SetupWebSockets()
+        {
+            if (string.IsNullOrWhiteSpace(Program.CertificatePath))
+            {
+                // Setup unsecure web sockets
+                Program.Server = new WebSocketsServer();
+            }
+            else
+            {
+                // Setup web sockets server
+                Program.Server = new WebSocketsServer(new X509Certificate2(Program.CertificatePath, Program.CertificatePassword));
+            }
+
+            // Process incomming connections
+            Program.Server.OnConnection += (sender, socket) =>
+            {
+                while (socket.State < WebSocketState.Closed)
+                {
+                    Program.DoSocketStuff(socket);
+                }
+
+                CommandHandler.ClientRemove(socket);
+            };
+
+            // Log exceptions
+            Program.Server.OnException += (sender, exception) =>
+            {
+                Console.WriteLine(DateTime.Now.ToString("T") + " ERR> " + exception.Message +
+                    (exception.InnerException != null ? " > " + exception.InnerException.Message : string.Empty));
+            };
+
+            // Start websockets
+            Task.Run(() => Program.Server.Listen(4555));
         }
 
         /// <summary>
@@ -143,7 +202,7 @@
         /// </summary>
         /// <param name="message">The message</param>
         /// <returns>Task result</returns>
-        private Task Log(LogMessage message)
+        private Task Log(DNET.LogMessage message)
         {
             Console.WriteLine(message.ToString());
             return Task.CompletedTask;

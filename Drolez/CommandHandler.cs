@@ -1,9 +1,10 @@
-﻿namespace Drolez
+namespace Drolez
 {
-    using Discord.WebSocket;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.WebSockets;
+    using DW = Discord.WebSocket;
 
     /// <summary>
     /// Command handler
@@ -11,16 +12,21 @@
     public static class CommandHandler
     {
         /// <summary>
+        /// List of all commands
+        /// </summary>
+        private static Dictionary<string, ICommand> commands = new Dictionary<string, ICommand>();
+
+        /// <summary>
         /// All registered users
         /// </summary>
-        private static Dictionary<WebSocket, SocketUser> sockets = new Dictionary<WebSocket, SocketUser>();
+        private static Dictionary<WebSocket, DW.SocketUser> sockets = new Dictionary<WebSocket, DW.SocketUser>();
 
         /// <summary>
         /// Add client to message loop
         /// </summary>
         /// <param name="socket">Connected client</param>
         /// <param name="user">Discord user</param>
-        public static void ClientAdd(WebSocket socket, SocketUser user)
+        public static void ClientAdd(WebSocket socket, DW.SocketUser user)
         {
             sockets.TryAdd(socket, user);
         }
@@ -29,11 +35,11 @@
         /// Remove client from message loop
         /// </summary>
         /// <param name="socket">Connected client</param>
-        public static void ClientRemove(WebSocket client)
+        public static void ClientRemove(WebSocket socket)
         {
-            if (sockets.ContainsKey(client))
+            if (sockets.ContainsKey(socket))
             {
-                sockets.Remove(client);
+                sockets.Remove(socket);
             }
         }
 
@@ -48,41 +54,47 @@
         }
 
         /// <summary>
+        /// Load web commands
+        /// </summary>
+        public static void LoadCommands()
+        {
+            List<Type> commandsToLoad = typeof(CommandHandler).Assembly.GetTypes().Where(type => string.Equals(type.Namespace, "Drolez.Commands", StringComparison.Ordinal)).ToList();
+
+            foreach (Type commandClass in commandsToLoad.Where(item => typeof(ICommand).IsAssignableFrom(item)))
+            {
+                try
+                {
+                    CommandInfo info = commandClass.GetCustomAttributes(typeof(CommandInfo), true).FirstOrDefault() as CommandInfo;
+                    commands.Add(info.Command, (ICommand)Activator.CreateInstance(commandClass));
+
+                    Console.WriteLine("Loaded command: " + info.Command);
+                }
+                catch (Exception ex)
+                {
+                    ex.ToString();
+                }
+            }
+        }
+
+        /// <summary>
         /// Process command input
         /// </summary>
-        /// <param name="socket">Websocket client</param>
+        /// <param name="socket">Web socket client</param>
         /// <param name="commandMessage">Command requested</param>
         public static void ProcessCommand(WebSocket socket, string commandMessage)
         {
             // Test command, before interface gets implemented
-            string[] commandStuff = commandMessage.Split('/');
+            string[] commandStuff = commandMessage.Split('/').Select(part => part.Trim()).ToArray();
             string command = commandStuff.GetPart(0);
-            string parameter1 = commandStuff.GetPart(1);
 
-            if (command == "authorized" && !string.IsNullOrWhiteSpace(parameter1))
+            if (!string.IsNullOrWhiteSpace(command) && CommandHandler.commands.ContainsKey(command))
             {
-                ulong user = 0;
-
-                if (ulong.TryParse(parameter1, out user))
+                if (!CommandHandler.commands[command].Run(socket, CommandHandler.sockets[socket], commandStuff.Skip(1).ToArray()))
                 {
-                    SocketUser foundUser = Program.DiscordClient.GetUser(user);
-
-                    if (foundUser != null)
-                    {
-                        string[] guilds = foundUser.MutualGuilds
-                            .Where(guild => guild.Roles.FirstOrDefault(role => role.Permissions.Administrator) != null)
-                            .Select(guild => guild.Id.ToString())
-                            .ToArray();
-
-                        socket.Send(" " + string.Join(',', guilds));
-                        return;
-                    }
-                    else
-                    {
-                        socket.Send("ERR:NoUser!");
-                        return;
-                    }
+                    socket.Send("ERR:Empty!");
                 }
+
+                return;
             }
 
             socket.Send("ERR:Unknown!");

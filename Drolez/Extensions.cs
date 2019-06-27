@@ -1,16 +1,22 @@
-﻿namespace Drolez
+namespace Drolez
 {
-    using Discord;
     using System;
     using System.Linq;
     using System.Net.WebSockets;
     using System.Threading;
+    using DNET = Discord;
+    using JSON = Newtonsoft.Json;
 
     /// <summary>
     /// Extension methods
     /// </summary>
     public static class Extensions
     {
+        /// <summary>
+        /// 1MB web socket buffer
+        /// </summary>
+        private const int WebSocketBufferSize = 256 * 1024;
+
         /// <summary>
         /// Get array field
         /// </summary>
@@ -28,43 +34,39 @@
         }
 
         /// <summary>
-        /// Recieve message from client
+        /// Receive message from client
         /// </summary>
-        /// <param name="socket">Websocket client</param>
-        /// <returns>Recieved message</returns>
-        public static string Recieve(this WebSocket socket)
+        /// <param name="socket">Web socket client</param>
+        /// <returns>Received message</returns>
+        public static string Receive(this WebSocket socket)
         {
             try
             {
                 CancellationTokenSource source = new CancellationTokenSource();
                 CancellationToken token = source.Token;
 
-                byte[] array = new byte[2048];
+                byte[] array = new byte[Extensions.WebSocketBufferSize];
                 ArraySegment<byte> buffer = new ArraySegment<byte>(array);
 
-                socket.ReceiveAsync(buffer, token).GetAwaiter().GetResult();
+                WebSocketReceiveResult result = socket.ReceiveAsync(buffer, token).GetAwaiter().GetResult();
                 string message = new string(buffer.ToArray().Where(part => part > 0).Select(part => (char)part).ToArray());
 
                 // Test channel, DEBUG out <---------------------------------------------------------------------------------------------------- Will nuke later
-                ((ITextChannel)Program.DiscordClient.GetChannel(593508765144186890)).SendMessageAsync("IN:" + message.Length + "> " + message);
+                ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890)).SendMessageAsync("IN:" + message.Length + "> " + message);
 
                 return message;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ConsoleColor color = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("ERR>" + ex.ToString());
-                Console.ForegroundColor = color;
+                // Do nothing
+                return null;
             }
-
-            return null;
         }
 
         /// <summary>
         /// Send text to specific client
         /// </summary>
-        /// <param name="socket">Websocket client</param>
+        /// <param name="socket">Web socket client</param>
         /// <param name="message">Message to send</param>
         public static void Send(this WebSocket socket, string message)
         {
@@ -73,7 +75,17 @@
             socket.SendAsync(message.ToSegment(), WebSocketMessageType.Text, true, token);
 
             // Test channel, DEBUG out <---------------------------------------------------------------------------------------------------- Will nuke later
-            ((ITextChannel)Program.DiscordClient.GetChannel(593508765144186890)).SendMessageAsync("OUT:" + message.Length + "> " + message);
+            ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890)).SendMessageAsync("OUT:" + message.Length + "> " + message);
+        }
+
+        /// <summary>
+        /// Convert object to JSON string
+        /// </summary>
+        /// <param name="obj">Object to convert</param>
+        /// <returns>JSON string</returns>
+        public static string ToJSON(this object obj)
+        {
+            return JSON.JsonConvert.SerializeObject(obj);
         }
 
         /// <summary>

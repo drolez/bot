@@ -9,9 +9,8 @@
     <PackageReference Include="Discord.Net" Version="2.1.1">
       <IncludeAssets></IncludeAssets>
     </PackageReference>
-    <PackageReference Include="WebSocketServer" Version="1.0.8">
-      <IncludeAssets></IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Ninja.WebSockets" Version="1.1.6" />
   </ItemGroup>
 
 </Project>
