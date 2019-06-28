@@ -56,3 +56,36 @@ Action contains event name (see below).
 
 List of events that get send to connected clients:<br>
 **guildJoined**, **guildLeft**, **roleCreated**, **roleDeleted**, **roleUpdated**, **userLeft**
+
+# Extensibility
+
+You can easilly add more commands to this bot by just implementing ICommand interface and adding CommandInfo attribute to it.<br>
+Than just place it in the Commands folder, rebuild it and run! Commands in that namespace will load automatically on start-up.
+```C#
+namespace Drolez.Commands
+{
+    using System.Net.WebSockets;
+    using DW = Discord.WebSocket;
+
+    /// <summary>
+    /// string in the CommandInfo is the command name
+    /// </summary>
+    [CommandInfo("my-amazing-command")]
+    public class SetRolePath : ICommand
+    {
+        /// <summary>
+        /// Run my amazing example command
+        /// </summary>
+        /// <param name="socket">Web socket</param>
+        /// <param name="user">Discord user who invoked this command</param>
+        /// <param name="parameters">Command parameters</param>
+        /// <returns>True on success</returns>
+        public bool Run(WebSocket socket, DW.SocketUser user, string[] parameters)
+        {
+            // First parameter is what client will see in Action parameter, second is and object (Data)
+            socket.Send("myAmazingCommand", "Hello");
+            return true;
+        }
+    }
+}
+```
