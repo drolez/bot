@@ -71,7 +71,7 @@ namespace Drolez.Commands
     /// string in the CommandInfo is the command name
     /// </summary>
     [CommandInfo("my-amazing-command")]
-    public class SetRolePath : ICommand
+    public class MyAmazingCommand : ICommand
     {
         /// <summary>
         /// Run my amazing example command
