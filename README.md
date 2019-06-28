@@ -59,8 +59,10 @@ List of events that get send to connected clients:<br>
 
 # Extensibility
 
-You can easilly add more commands to this bot by just implementing ICommand interface and adding CommandInfo attribute to it.<br>
-Than just place it in the Commands folder, rebuild it and run! Commands in that namespace will load automatically on start-up.
+You can easilly add more commands to this bot.<br>
+By implementing **ICommand** interface and adding **CommandInfo** attribute to it.<br>
+Than just place it in the Commands folder, rebuild it and run!<br>
+Commands in **Drolez.Commands** namespace will load automatically on start-up.
 ```C#
 namespace Drolez.Commands
 {
