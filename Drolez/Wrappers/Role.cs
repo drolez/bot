@@ -82,6 +82,33 @@
         public DNET.GuildPermissions Permissions { get; set; }
 
         /// <summary>
+        /// Update database
+        /// </summary>
+        /// <param name="id">Role identifier</param>
+        /// <param name="path">Folder path</param>
+        /// <param name="guild">Guild identifier</param>
+        public static void UpdateDatabase(ulong id, string path, ulong guild)
+        {
+            SqlCommand command = null;
+
+            if (DatabaseAccess.Read("SELECT * FROM `RoleFolders` WHERE `Id`=`" + id.ToString() + "`") == null)
+            {
+                // Create
+                command = new SqlCommand("INSERT INTO `RoleFolders` (`Id`, `Folder`, `Guild`) VALUES ('@id', '@path', '@guild')", DatabaseAccess.Database);
+            }
+            else
+            {
+                // Update
+                command = new SqlCommand("UPDATE INTO `RoleFolders` SET `Id`=@id, `Folder`=@folder, `Guild`=@guild", DatabaseAccess.Database);
+            }
+
+            command.Parameters.Add("@id", SqlDbType.BigInt).Value = id;
+            command.Parameters.Add("@folder", SqlDbType.Text).Value = path;
+            command.Parameters.Add("@guild", SqlDbType.BigInt).Value = guild;
+            command.ExecuteNonQuery();
+        }
+
+        /// <summary>
         /// Save role settings to DB
         /// </summary>
         /// <param name="guild">Discord guild containing role</param>
@@ -94,32 +121,15 @@
                     '/',
                     this.Path.Trim().Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(folder => Regex.Replace(folder, "^[0-9A-Za-z ]+$", string.Empty).Trim())
-                    .Where(folder => string.IsNullOrWhiteSpace(folder)));
+                    .Where(folder => !string.IsNullOrWhiteSpace(folder)));
 
                 if (string.IsNullOrWhiteSpace(this.Path) || !this.Path.StartsWith('/'))
                 {
                     this.Path = "/";
                 }
-
-                if (DatabaseAccess.Read("SELECT * FROM `RoleFolders` WHERE `Id`=`" + this.Identifier.ToString() + "`") == null)
-                {
-                    // Create
-                    SqlCommand command = new SqlCommand("INSERT INTO `RoleFolders` (`Id`, `Folder`, `Guild`) VALUES ('@id', '@path', '@guild')", DatabaseAccess.Database);
-                    command.Parameters.Add("@id", SqlDbType.BigInt).Value = this.Identifier;
-                    command.Parameters.Add("@folder", SqlDbType.Text).Value = this.Path;
-                    command.Parameters.Add("@guild", SqlDbType.BigInt).Value = this.GuildIdentifier;
-                    command.ExecuteNonQuery();
-                }
-                else
-                {
-                    // Update
-                    SqlCommand command = new SqlCommand("UPDATE INTO `RoleFolders` SET `Id`=@id, `Folder`=@folder, `Guild`=@guild", DatabaseAccess.Database);
-                    command.Parameters.Add("@id", SqlDbType.BigInt).Value = this.Identifier;
-                    command.Parameters.Add("@folder", SqlDbType.Text).Value = this.Path;
-                    command.Parameters.Add("@guild", SqlDbType.BigInt).Value = this.GuildIdentifier;
-                    command.ExecuteNonQuery();
-                }
             }
+
+            Role.UpdateDatabase(this.Identifier, this.Path, this.GuildIdentifier);
 
             if (guild != null)
             {

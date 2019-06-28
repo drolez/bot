@@ -1,9 +1,14 @@
 
 \.vs/
 
+Drolez/Properties/PublishProfiles/
+
 Drolez/bin/
 
 Drolez/obj/
 *.xml
+*.user
+
+Drolez/StyleCop\.Cache
 
 Drolez/StyleCop\.Cache
