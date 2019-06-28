@@ -65,13 +65,22 @@ namespace Drolez
                 try
                 {
                     CommandInfo info = commandClass.GetCustomAttributes(typeof(CommandInfo), true).FirstOrDefault() as CommandInfo;
-                    commands.Add(info.Command, (ICommand)Activator.CreateInstance(commandClass));
 
-                    Console.WriteLine("Loaded command: " + info.Command);
+                    try
+                    {
+                        commands.Add(info.Command, (ICommand)Activator.CreateInstance(commandClass));
+
+                        Console.WriteLine("Loaded command: " + info.Command);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Loading command '" + info.Command + "' failed: " + ex.ToString());
+                    }
                 }
                 catch (Exception ex)
                 {
                     ex.ToString();
+                    Console.WriteLine("Loading command '" + commandClass.GetType().Name + "' failed: Command info missing!");
                 }
             }
         }
