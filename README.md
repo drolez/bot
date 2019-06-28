@@ -6,12 +6,21 @@ Web dashboard using this bot: https://drolez.studio/
 
 Written in C# for .NET core 2.2
 
-Command/Event return JSON format: **{"Data":object,"action":string}**<br>
+Command/Event return JSON format:
+```json
+{"Data":object,"action":string}
+```
 
 # Websocket Commands:
 
-Example of error return: **{"Data":"Error message","action":"error"}**<br>
-Example of roles-list return: **{"Data":roleListJSONObject,"action":"rolesList"}**
+Example of error return:
+```json
+{"Data":"Error message","action":"error"}
+```
+Example of roles-list return:
+```json
+{"Data":roleListJSONObject,"action":"rolesList"}
+```
 
 **auth/\<token>/\<TimeToLive(seconds)>**<br>
 Returns: true on success<br>
@@ -53,6 +62,9 @@ Returns: pong
 Event JSON format:<br>
 Data can contain *Role*, *Guild*, *User* object<br>
 Action contains event name (see below).
+```json
+{"Data":userObject,"action":"userLeft"}
+```
 
 List of events that get send to connected clients:<br>
 **guildJoined**, **guildLeft**, **roleCreated**, **roleDeleted**, **roleUpdated**, **userLeft**
