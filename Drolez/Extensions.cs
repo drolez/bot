@@ -1,6 +1,7 @@
 namespace Drolez
 {
     using System;
+    using System.Data;
     using System.Linq;
     using System.Net.WebSockets;
     using System.Threading;
@@ -17,6 +18,13 @@ namespace Drolez
         /// </summary>
         private const int WebSocketBufferSize = 1024 * 1024;
 
+        /// <summary>
+        /// Connection event handler
+        /// </summary>
+        /// <param name="sender">Object that raised exception</param>
+        /// <param name="exception">Raised exception</param>
+        public delegate void OnExceptionHandler(object sender, Exception exception);
+
         #region Debug
 
         /// <summary>
@@ -26,8 +34,8 @@ namespace Drolez
 
         private static TimeSpan debugCooldown = TimeSpan.FromSeconds(10);
 
-        private static DateTime debugLastSendIN = DateTime.Now;
-        private static DateTime debugLastSendOUT = DateTime.Now;
+        private static DateTime debugLastSendIN = DateTime.MinValue;
+        private static DateTime debugLastSendOUT = DateTime.MinValue;
 
         /// <summary>
         /// Test channel, DEBUG out <!---------------------------------------------------------------------------------------------------- Will nuke later-->
@@ -36,7 +44,7 @@ namespace Drolez
         /// <param name="message">The message</param>
         private static void XDEBUGOUT(bool input, string message)
         {
-            if (DateTime.Now > (input? debugLastSendIN + debugCooldown : debugLastSendOUT + debugCooldown))
+            if (DateTime.Now > (input ? debugLastSendIN + debugCooldown : debugLastSendOUT + debugCooldown))
             {
                 if (input)
                 {
@@ -55,12 +63,11 @@ namespace Drolez
                 }
 
                 ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890))
-                    .SendMessageAsync((input ? "IN" : "OUT:") + message.Length + "> " + messageResult);
+                    .SendMessageAsync((input ? "IN:" : "OUT:") + message.Length + "> " + messageResult);
             }
         }
 
-
-        #endregion
+        #endregion Debug
 
         /// <summary>
         /// Get array field
@@ -109,6 +116,25 @@ namespace Drolez
         }
 
         /// <summary>
+        /// Convert DB record to string
+        /// </summary>
+        /// <param name="record">DB data</param>
+        /// <param name="index">Record index</param>
+        /// <returns>Record string value</returns>
+        public static string RecordToString(this IDataRecord record, int index)
+        {
+            try
+            {
+                return record[index].ToString();
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Send text to specific client
         /// </summary>
         /// <param name="socket">Web socket client</param>
@@ -142,6 +168,5 @@ namespace Drolez
         {
             return new ArraySegment<byte>(text.Select(letter => (byte)letter).ToArray());
         }
-
     }
 }

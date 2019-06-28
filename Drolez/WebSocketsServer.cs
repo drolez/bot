@@ -61,13 +61,6 @@
         public delegate void OnConnectionHandler(WebSocketsServer server, WebSocket webSocket);
 
         /// <summary>
-        /// Connection event handler
-        /// </summary>
-        /// <param name="server">Web socket server</param>
-        /// <param name="exception">Raised exception</param>
-        public delegate void OnExceptionHandler(WebSocketsServer server, Exception exception);
-
-        /// <summary>
         /// On connection event
         /// </summary>
         public event OnConnectionHandler OnConnection;
@@ -75,7 +68,7 @@
         /// <summary>
         /// On Exception event
         /// </summary>
-        public event OnExceptionHandler OnException;
+        public event Extensions.OnExceptionHandler OnException;
 
         /// <summary>
         /// Gets or sets keep alive interval time

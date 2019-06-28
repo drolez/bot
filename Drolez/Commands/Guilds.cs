@@ -9,8 +9,8 @@
     /// Authorized command
     /// Returns list of guilds where user is an admin
     /// </summary>
-    [CommandInfo("authorized")]
-    public class Authorized : ICommand
+    [CommandInfo("guilds")]
+    public class Guilds : ICommand
     {
         /// <summary>
         /// Run authorized command
@@ -18,6 +18,7 @@
         /// <param name="socket">Web socket</param>
         /// <param name="user">Discord user who invoked command</param>
         /// <param name="parameters">Command parameters</param>
+        /// <returns>True on success</returns>
         public bool Run(WebSocket socket, DW.SocketUser user, string[] parameters)
         {
             if (parameters.Length == 0 || string.IsNullOrWhiteSpace(parameters[0]))
@@ -35,8 +36,7 @@
                 if (foundUser != null)
                 {
                     IEnumerable<Wrappers.Guild> guilds = foundUser.MutualGuilds
-                        .Where(guild => guild.Roles.FirstOrDefault(role => role.Permissions.Administrator) != null)
-                        .Select(guild => new Wrappers.Guild(guild));
+                        .Select(guild => new Wrappers.Guild(guild, guild.GetUser(userId).GuildPermissions.Administrator));
 
                     socket.Send(" " + guilds.ToJSON());
                     return true;

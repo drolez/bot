@@ -1,15 +1,18 @@
 ﻿namespace Drolez.Commands
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net.WebSockets;
+    using System.Text;
     using DW = Discord.WebSocket;
 
     /// <summary>
     /// Roles-list command
     /// Returns list of roles for specified guild and user
     /// </summary>
-    [CommandInfo("roles-list")]
-    public class ListRoles : ICommand
+    [CommandInfo("role")]
+    public class GetRole : ICommand
     {
         /// <summary>
         /// Run roles-list command
@@ -20,15 +23,16 @@
         /// <returns>True on success</returns>
         public bool Run(WebSocket socket, DW.SocketUser user, string[] parameters)
         {
-            if (parameters.Length == 0 || string.IsNullOrWhiteSpace(parameters[0]))
+            if (parameters.Length == 0 || string.IsNullOrWhiteSpace(parameters[0]) || string.IsNullOrWhiteSpace(parameters[1]))
             {
                 // Not enough parameters
                 return false;
             }
 
+            ulong roleId = 0;
             ulong guildId = 0;
 
-            if (!ulong.TryParse(parameters[0], out guildId))
+            if (!ulong.TryParse(parameters[0], out guildId) || !ulong.TryParse(parameters[1], out roleId))
             {
                 // NO guild specified
                 return false;
@@ -42,18 +46,15 @@
                 return false;
             }
 
-            ulong userId = 0;
+            DW.SocketRole foundRole = guild.GetUser(user.Id).Roles.FirstOrDefault(role => role.Id == roleId);
 
-            if (parameters.Length > 1 && string.IsNullOrWhiteSpace(parameters[1]) && ulong.TryParse(parameters[1], out userId))
+            if (foundRole != null)
             {
-                // List roles for specific user
-                socket.Send(guild.GetUser(userId).Roles.Select(role => new Wrappers.Role(role)).ToJSON());
+                socket.Send(new Wrappers.Role(foundRole).ToJSON());
                 return true;
             }
 
-            // List all roles in guild
-            socket.Send(guild.Roles.Select(role => new Wrappers.Role(role)).ToJSON());
-            return true;
+            return false;
         }
     }
 }

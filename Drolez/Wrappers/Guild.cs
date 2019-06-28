@@ -13,14 +13,21 @@
         /// Initializes a new instance of the <see cref="Guild" /> class.
         /// </summary>
         /// <param name="guild">Discord guild</param>
-        public Guild(DW.SocketGuild guild)
+        /// <param name="admin">Is user administrator for this guild?</param>
+        public Guild(DW.SocketGuild guild, bool admin)
         {
             this.Identifier = guild.Id;
             this.Icon = guild.IconUrl;
             this.IconIdentifier = guild.IconId;
             this.MemberCount = guild.MemberCount;
             this.Name = guild.Name;
+            this.IsAdministrator = admin;
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether user is an administrator in this guild
+        /// </summary>
+        public bool IsAdministrator { get; set; }
 
         /// <summary>
         /// Gets or sets guild icon
