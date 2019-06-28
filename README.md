@@ -4,7 +4,7 @@ This bot contains WebSockets server with SSL support for .NET core
 
 Written in C# for .NET core 2.2
 
-# Commands:
+# Websocket Commands:
 
 **auth/\<token>/\<TimeToLive(seconds)>**<br>
 Returns: true on success<br>
