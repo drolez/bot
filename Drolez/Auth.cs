@@ -59,15 +59,17 @@
                     result = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 }
 
+                Console.WriteLine(result);
+
                 // Get user info
                 DiscordUser user = JSON.JsonConvert.DeserializeObject<DiscordUser>(result);
 
                 // Set token time to live
                 Task.Delay(new TimeSpan(0, 0, timeToLive)).ContinueWith(o =>
-               {
-                   CommandHandler.ClientRemove(socket);
-                   socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Token expired!", source.Token).GetAwaiter().GetResult();
-               });
+                {
+                    CommandHandler.ClientRemove(socket);
+                    socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Token expired!", source.Token).GetAwaiter().GetResult();
+                });
 
                 return ulong.Parse(user.id);
             }

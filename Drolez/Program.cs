@@ -154,9 +154,11 @@ namespace Drolez
                 return;
             }
 
-            if (command.StartsWith("auth/") && command.Length > 9 && !CommandHandler.IsRegistered(socket))
+            if (command.StartsWith("auth/") && command.Length > 5 && !CommandHandler.IsRegistered(socket))
             {
-                string tokenData = command.Substring(9);
+                Console.WriteLine(command);
+                string tokenData = command.Substring(5);
+                Console.WriteLine(tokenData);
                 ulong userId = Auth.AuthenticateToken(tokenData, socket);
 
                 if (userId == 0)
