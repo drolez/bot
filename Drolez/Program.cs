@@ -149,6 +149,11 @@ namespace Drolez
         {
             string command = socket.Receive();
 
+            if (command == "ping")
+            {
+                socket.Send("pong");
+            }
+
             if (command == null)
             {
                 return;

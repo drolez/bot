@@ -5,3 +5,5 @@ Drolez/bin/
 
 Drolez/obj/
 *.xml
+
+Drolez/StyleCop\.Cache

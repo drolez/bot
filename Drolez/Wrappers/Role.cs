@@ -4,6 +4,8 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Data.SqlClient;
+    using System.Linq;
+    using System.Text.RegularExpressions;
     using DNET = Discord;
     using DW = Discord.WebSocket;
 
@@ -81,26 +83,82 @@
         /// <summary>
         /// Save role settings to DB
         /// </summary>
-        public void Save()
+        /// <param name="guild">Discord guild containing role</param>
+        /// <returns>True on success modify/insert</returns>
+        public bool Save(DW.SocketGuild guild = null)
         {
-            if (DatabaseAccess.Read("SELECT * FROM `RoleFolders` WHERE `Id`=`" + this.Identifier.ToString() + "`") == null)
+            if (!string.IsNullOrWhiteSpace(this.Path))
             {
-                // Create
-                SqlCommand command = new SqlCommand("INSERT INTO `RoleFolders` (`Id`, `Folder`, `Guild`) VALUES ('@id', '@path', '@guild')", DatabaseAccess.Database);
-                command.Parameters.Add("@id", SqlDbType.BigInt).Value = this.Identifier;
-                command.Parameters.Add("@folder", SqlDbType.Text).Value = this.Path;
-                command.Parameters.Add("@guild", SqlDbType.BigInt).Value = this.GuildIdentifier;
-                command.ExecuteNonQuery();
+                this.Path = "/" + string.Join(
+                    '/',
+                    this.Path.Trim().Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(folder => Regex.Replace(folder, "^[0-9A-Za-z ]+$", string.Empty).Trim())
+                    .Where(folder => string.IsNullOrWhiteSpace(folder)));
+
+                if (string.IsNullOrWhiteSpace(this.Path) || !this.Path.StartsWith('/'))
+                {
+                    this.Path = "/";
+                }
+
+                if (DatabaseAccess.Read("SELECT * FROM `RoleFolders` WHERE `Id`=`" + this.Identifier.ToString() + "`") == null)
+                {
+                    // Create
+                    SqlCommand command = new SqlCommand("INSERT INTO `RoleFolders` (`Id`, `Folder`, `Guild`) VALUES ('@id', '@path', '@guild')", DatabaseAccess.Database);
+                    command.Parameters.Add("@id", SqlDbType.BigInt).Value = this.Identifier;
+                    command.Parameters.Add("@folder", SqlDbType.Text).Value = this.Path;
+                    command.Parameters.Add("@guild", SqlDbType.BigInt).Value = this.GuildIdentifier;
+                    command.ExecuteNonQuery();
+                }
+                else
+                {
+                    // Update
+                    SqlCommand command = new SqlCommand("UPDATE INTO `RoleFolders` SET `Id`=@id, `Folder`=@folder, `Guild`=@guild", DatabaseAccess.Database);
+                    command.Parameters.Add("@id", SqlDbType.BigInt).Value = this.Identifier;
+                    command.Parameters.Add("@folder", SqlDbType.Text).Value = this.Path;
+                    command.Parameters.Add("@guild", SqlDbType.BigInt).Value = this.GuildIdentifier;
+                    command.ExecuteNonQuery();
+                }
             }
-            else
+
+            if (guild != null)
             {
-                // Update
-                SqlCommand command = new SqlCommand("UPDATE INTO `RoleFolders` SET `Id`=@id, `Folder`=@folder, `Guild`=@guild", DatabaseAccess.Database);
-                command.Parameters.Add("@id", SqlDbType.BigInt).Value = this.Identifier;
-                command.Parameters.Add("@folder", SqlDbType.Text).Value = this.Path;
-                command.Parameters.Add("@guild", SqlDbType.BigInt).Value = this.GuildIdentifier;
-                command.ExecuteNonQuery();
+                if (this.Identifier == 0)
+                {
+                    // Create role
+                    DNET.Color? color = null;
+
+                    if (this.Color != null && this.Color.Count == 3)
+                    {
+                        color = new DNET.Color(this.Color[0], this.Color[1], this.Color[2]);
+                    }
+
+                    guild.CreateRoleAsync(this.Name, this.Permissions, color).RunSynchronously();
+                    return true;
+                }
+                else
+                {
+                    // Modify role
+                    DW.SocketRole role = guild.GetRole(this.Identifier);
+
+                    if (role != null)
+                    {
+                        role.ModifyAsync(changed =>
+                        {
+                            changed.Name = this.Name;
+                            changed.Permissions = this.Permissions;
+
+                            if (this.Color != null && this.Color.Count == 3)
+                            {
+                                changed.Color = new DNET.Optional<DNET.Color>(new DNET.Color(this.Color[0], this.Color[1], this.Color[2]));
+                            }
+                        }).RunSynchronously();
+
+                        return true;
+                    }
+                }
             }
+
+            return false;
         }
     }
 }
