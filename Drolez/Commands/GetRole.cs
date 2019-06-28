@@ -8,14 +8,14 @@
     using DW = Discord.WebSocket;
 
     /// <summary>
-    /// Roles-list command
+    /// Roles command
     /// Returns list of roles for specified guild and user
     /// </summary>
     [CommandInfo("role")]
     public class GetRole : ICommand
     {
         /// <summary>
-        /// Run roles-list command
+        /// Run roles command
         /// </summary>
         /// <param name="socket">Web socket</param>
         /// <param name="user">Discord user who invoked command</param>

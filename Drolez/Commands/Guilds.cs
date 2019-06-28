@@ -6,14 +6,14 @@
     using DW = Discord.WebSocket;
 
     /// <summary>
-    /// Authorized command
+    /// Guilds command
     /// Returns list of guilds where user is an admin
     /// </summary>
     [CommandInfo("guilds")]
     public class Guilds : ICommand
     {
         /// <summary>
-        /// Run authorized command
+        /// Run guilds command
         /// </summary>
         /// <param name="socket">Web socket</param>
         /// <param name="user">Discord user who invoked command</param>
