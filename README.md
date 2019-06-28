@@ -8,7 +8,7 @@ Written in C# for .NET core 2.2
 
 Command/Event return JSON format:
 ```json
-{"Data":object,"action":string}
+{"Data":{},"action":""}
 ```
 
 # Websocket Commands:
@@ -19,7 +19,7 @@ Example of error return:
 ```
 Example of roles-list return:
 ```json
-{"Data":roleListJSONObject,"action":"rolesList"}
+{"Data":[{},{},,,,],"action":"rolesList"}
 ```
 
 **auth/\<token>/\<TimeToLive(seconds)>**<br>
@@ -63,7 +63,7 @@ Event JSON format:<br>
 Data can contain *Role*, *Guild*, *User* object<br>
 Action contains event name (see below).
 ```json
-{"Data":userObject,"action":"userLeft"}
+{"Data":{"Identifier":0,,,,},"action":"userLeft"}
 ```
 
 List of events that get send to connected clients:<br>
