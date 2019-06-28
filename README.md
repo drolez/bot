@@ -1,4 +1,5 @@
 # Drolez bot
+# Created with love for Discord Hack Week
 This bot does management stuff, that Web API can't do.<br>
 This bot contains WebSockets server with SSL support for .NET core
 
