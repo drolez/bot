@@ -4,6 +4,7 @@ namespace Drolez
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.WebSockets;
+    using System.Threading.Tasks;
     using DW = Discord.WebSocket;
 
     /// <summary>
@@ -20,6 +21,102 @@ namespace Drolez
         /// All registered users
         /// </summary>
         private static Dictionary<WebSocket, DW.SocketUser> sockets = new Dictionary<WebSocket, DW.SocketUser>();
+
+        /// <summary>
+        /// Broadcast guild change to all relevan users
+        /// </summary>
+        /// <param name="guild">Discord guild</param>
+        /// <param name="eventName">Event name</param>
+        /// <returns>Completed task</returns>
+        public static Task BroadcastGuildChange(DW.SocketGuild guild, string eventName)
+        {
+            if (eventName == "guildLeft")
+            {
+                DatabaseAccess.Command("DELETE * FROM `RoleFolders` WHERE `Guild`=`" + guild.Id + "`");
+            }
+
+            IEnumerable<Tuple<WebSocket, bool>> targets = guild.Users.ToList().Select(user =>
+            {
+                foreach (KeyValuePair<WebSocket, DW.SocketUser> socket in CommandHandler.sockets)
+                {
+                    if (socket.Value.Id == user.Id)
+                    {
+                        return new Tuple<WebSocket, bool>(socket.Key, user.Roles.FirstOrDefault(role => role.Permissions.Administrator) != null);
+                    }
+                }
+
+                return null;
+            }).Where(socket => socket != null);
+
+            foreach (Tuple<WebSocket, bool> socket in targets)
+            {
+                try
+                {
+                    socket.Item1.Send(eventName, new Wrappers.Guild(guild, socket.Item2));
+                }
+                catch (Exception ex)
+                {
+                    ex.ToString();
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Broadcast role change to all relevant users
+        /// </summary>
+        /// <param name="role">Discord role</param>
+        /// <param name="eventName">Event name</param>
+        /// <returns>Completed task</returns>
+        public static Task BroadcastRoleChange(DW.SocketRole role, string eventName)
+        {
+            IEnumerable<WebSocket> targets = role.Guild.Users.ToList().Select(user =>
+            {
+                foreach (KeyValuePair<WebSocket, DW.SocketUser> socket in CommandHandler.sockets)
+                {
+                    if (socket.Value.Id == user.Id)
+                    {
+                        return socket.Key;
+                    }
+                }
+
+                return null;
+            }).Where(socket => socket != null);
+
+            foreach (WebSocket socket in targets)
+            {
+                try
+                {
+                    socket.Send(eventName, new Wrappers.Role(role));
+                }
+                catch (Exception ex)
+                {
+                    ex.ToString();
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Broadcast changed user to all his connected instances
+        /// </summary>
+        /// <param name="user">Discord user</param>
+        /// <param name="eventName">Event name</param>
+        /// <returns>Completed task</returns>
+        public static Task BroadcastUserChange(DW.SocketUser user, string eventName)
+        {
+            foreach (KeyValuePair<WebSocket, DW.SocketUser> socket in CommandHandler.sockets)
+            {
+                if (socket.Value.Id == user.Id)
+                {
+                    socket.Key.Send(eventName, new Wrappers.User(user));
+                }
+            }
+
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// Add client to message loop

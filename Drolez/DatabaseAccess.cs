@@ -45,6 +45,23 @@
         }
 
         /// <summary>
+        /// Run command with no return
+        /// </summary>
+        /// <param name="sql">SQL command</param>
+        public static void Command(string sql)
+        {
+            try
+            {
+                SqlCommand command = new SqlCommand(sql, DatabaseAccess.Database);
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                DatabaseAccess.OnException?.Invoke(DatabaseAccess.Database, ex);
+            }
+        }
+
+        /// <summary>
         /// Connect to SQL database
         /// </summary>
         /// <param name="settings">Connection settings</param>

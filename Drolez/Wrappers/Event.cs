@@ -21,7 +21,7 @@
         public string ToEventJSON()
         {
             string invalid = this.ToJSON();
-            return invalid.Replace("\"DrolezEventMutationDescriptor\":", "\"mutation\":");
+            return invalid.Replace("\"DrolezEventMutationDescriptor\":", "\"action\":");
         }
     }
 }

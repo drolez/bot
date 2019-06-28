@@ -142,28 +142,6 @@ namespace Drolez
         }
 
         /// <summary>
-        /// Guild changed
-        /// </summary>
-        /// <param name="guild">Guild that invoked event</param>
-        /// <param name="eventName">Event name</param>
-        /// <returns>Completed task</returns>
-        private static Task DiscordClientGuildChange(DW.SocketGuild guild, string eventName)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Role changed
-        /// </summary>
-        /// <param name="role">Role that invoked event</param>
-        /// <param name="eventName">Event name</param>
-        /// <returns>Completed task</returns>
-        private static Task DiscordClientRoleChange(DW.SocketRole role, string eventName)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
         /// This does socket stuff, when socket stuff happens
         /// </summary>
         /// <param name="socket">Web socket</param>
@@ -254,21 +232,30 @@ namespace Drolez
             Program.DiscordClient.Log += Program.Log;
 
             // Bot was added to guild
-            Program.DiscordClient.GuildAvailable += (guild) => Program.DiscordClientGuildChange(guild, "guildJoined");
-            Program.DiscordClient.JoinedGuild += (guild) => Program.DiscordClientGuildChange(guild, "guildJoined");
+            Program.DiscordClient.GuildAvailable += (guild) => CommandHandler.BroadcastGuildChange(guild, "guildJoined");
+            Program.DiscordClient.JoinedGuild += (guild) => CommandHandler.BroadcastGuildChange(guild, "guildJoined");
 
             // Bot was removed from guild
-            Program.DiscordClient.GuildUnavailable += (guild) => Program.DiscordClientGuildChange(guild, "guildLeft");
-            Program.DiscordClient.LeftGuild += (guild) => Program.DiscordClientGuildChange(guild, "guildLeft");
+            Program.DiscordClient.GuildUnavailable += (guild) => CommandHandler.BroadcastGuildChange(guild, "guildLeft");
+            Program.DiscordClient.LeftGuild += (guild) => CommandHandler.BroadcastGuildChange(guild, "guildLeft");
 
             // New role was created
-            Program.DiscordClient.RoleCreated += (role) => Program.DiscordClientRoleChange(role, "roleCreated");
+            Program.DiscordClient.RoleCreated += (role) => CommandHandler.BroadcastRoleChange(role, "roleCreated");
 
-            // Bot was removed from guild
-            Program.DiscordClient.RoleDeleted += (role) => Program.DiscordClientRoleChange(role, "roleDeleted");
+            // Role was deleted
+            Program.DiscordClient.RoleDeleted += (role) => CommandHandler.BroadcastRoleChange(role, "roleDeleted");
 
-            // Bot was removed from guild
-            Program.DiscordClient.RoleUpdated += (old, updated) => Program.DiscordClientRoleChange(updated, "roleUpdated");
+            // Role was update
+            Program.DiscordClient.RoleUpdated += (old, updated) => CommandHandler.BroadcastRoleChange(updated, "roleUpdated");
+
+            // User was updated
+            Program.DiscordClient.UserUpdated += (old, updated) => CommandHandler.BroadcastUserChange(updated, "userUpdated");
+
+            // User was updated
+            Program.DiscordClient.UserLeft += (user) => CommandHandler.BroadcastUserChange(user, "userLeft");
+
+            // User was updated
+            Program.DiscordClient.UserBanned += (user, guild) => CommandHandler.BroadcastUserChange(user, "userLeft");
         }
 
         /// <summary>
