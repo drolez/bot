@@ -4,9 +4,10 @@ This bot contains WebSockets server with SSL support for .NET core
 
 Written in C# for .NET core 2.2
 
+Command/Event return JSON format: **{"Data":object,"action":string}**<br>
+
 # Websocket Commands:
 
-Command return JSON format: **{"Data":object,"action":string}**<br>
 Example of error return: **{"Data":"Error message","action":"error"}**<br>
 Example of roles-list return: **{"Data":roleListJSONObject,"action":"rolesList"}**
 
@@ -46,6 +47,10 @@ Desc: On fail either returns "ERR:Empty!" or "ERR:Unknown!"
 Returns: pong
 
 # Websocket Events:
+
+Event JSON format:<br>
+Data can contain *Role*, *Guild*, *User* object<br>
+Action contains event name (see below).
 
 List of events that get send to connected clients:<br>
 **guildJoined**, **guildLeft**, **roleCreated**, **roleDeleted**, **roleUpdated**, **userLeft**
