@@ -6,6 +6,7 @@
     using System.Data.SqlClient;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using DNET = Discord;
     using DW = Discord.WebSocket;
 
@@ -132,7 +133,7 @@
                         color = new DNET.Color(this.Color[0], this.Color[1], this.Color[2]);
                     }
 
-                    guild.CreateRoleAsync(this.Name, this.Permissions, color).RunSynchronously();
+                    Task.Run(() => guild.CreateRoleAsync(this.Name, this.Permissions, color));
                     return true;
                 }
                 else
@@ -142,7 +143,7 @@
 
                     if (role != null)
                     {
-                        role.ModifyAsync(changed =>
+                        Task.Run(() => role.ModifyAsync(changed =>
                         {
                             changed.Name = this.Name;
                             changed.Permissions = this.Permissions;
@@ -151,7 +152,7 @@
                             {
                                 changed.Color = new DNET.Optional<DNET.Color>(new DNET.Color(this.Color[0], this.Color[1], this.Color[2]));
                             }
-                        }).RunSynchronously();
+                        }));
 
                         return true;
                     }

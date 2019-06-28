@@ -50,7 +50,7 @@
 
             if (foundRole != null)
             {
-                socket.Send(new Wrappers.Role(foundRole).ToJSON());
+                socket.Send("role", new Wrappers.Role(foundRole));
                 return true;
             }
 

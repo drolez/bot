@@ -38,7 +38,7 @@
                     IEnumerable<Wrappers.Guild> guilds = foundUser.MutualGuilds
                         .Select(guild => new Wrappers.Guild(guild, guild.GetUser(userId).GuildPermissions.Administrator));
 
-                    socket.Send(" " + guilds.ToJSON());
+                    socket.Send("guilds", guilds);
                     return true;
                 }
             }

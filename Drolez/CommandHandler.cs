@@ -100,13 +100,13 @@ namespace Drolez
             {
                 if (!CommandHandler.commands[command].Run(socket, CommandHandler.sockets[socket], commandStuff.Skip(1).ToArray()))
                 {
-                    socket.Send("ERR:Empty!");
+                    socket.Send("error", "Empty!");
                 }
 
                 return;
             }
 
-            socket.Send("ERR:Unknown!");
+            socket.Send("error", "Unknown!");
         }
     }
 }

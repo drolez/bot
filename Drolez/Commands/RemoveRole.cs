@@ -2,6 +2,7 @@
 {
     using System.Linq;
     using System.Net.WebSockets;
+    using System.Threading.Tasks;
     using DW = Discord.WebSocket;
 
     /// <summary>
@@ -47,7 +48,7 @@
 
                     if (role != null)
                     {
-                        role.DeleteAsync().RunSynchronously();
+                        Task.Run(() => role.DeleteAsync());
                         return true;
                     }
                 }

@@ -35,7 +35,11 @@
 
                 if (tokenArray.Length < 2 || !int.TryParse(tokenArray[1], out timeToLive) || timeToLive <= 0)
                 {
-                    socket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "Invalid token data!", source.Token).GetAwaiter().GetResult();
+                    if (socket.State == WebSocketState.Open)
+                    {
+                        socket.CloseAsync(WebSocketCloseStatus.PolicyViolation, "Invalid token data!", source.Token).GetAwaiter().GetResult();
+                    }
+
                     return 0;
                 }
 
@@ -66,14 +70,22 @@
                 Task.Delay(new TimeSpan(0, 0, timeToLive)).ContinueWith(o =>
                 {
                     CommandHandler.ClientRemove(socket);
-                    socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Token expired!", source.Token).GetAwaiter().GetResult();
+
+                    if (socket.State == WebSocketState.Open)
+                    {
+                        socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Token expired!", source.Token).GetAwaiter().GetResult();
+                    }
                 });
 
                 return ulong.Parse(user.id);
             }
             catch (Exception ex)
             {
-                socket.CloseAsync(WebSocketCloseStatus.ProtocolError, ex.Message, source.Token).GetAwaiter().GetResult();
+                if (socket.State == WebSocketState.Open)
+                {
+                    socket.CloseAsync(WebSocketCloseStatus.ProtocolError, ex.Message, source.Token).GetAwaiter().GetResult();
+                }
+
                 return 0;
             }
         }

@@ -25,50 +25,6 @@ namespace Drolez
         /// <param name="exception">Raised exception</param>
         public delegate void OnExceptionHandler(object sender, Exception exception);
 
-        #region Debug
-
-        /// <summary>
-        /// Max length of debug output
-        /// </summary>
-        private const int MaxDebugLength = 50;
-
-        private static TimeSpan debugCooldown = TimeSpan.FromSeconds(10);
-
-        private static DateTime debugLastSendIN = DateTime.MinValue;
-        private static DateTime debugLastSendOUT = DateTime.MinValue;
-
-        /// <summary>
-        /// Test channel, DEBUG out <!---------------------------------------------------------------------------------------------------- Will nuke later-->
-        /// </summary>
-        /// <param name="input">The input</param>
-        /// <param name="message">The message</param>
-        private static void XDEBUGOUT(bool input, string message)
-        {
-            if (DateTime.Now > (input ? debugLastSendIN + debugCooldown : debugLastSendOUT + debugCooldown))
-            {
-                if (input)
-                {
-                    debugLastSendIN = DateTime.Now;
-                }
-                else
-                {
-                    debugLastSendOUT = DateTime.Now;
-                }
-
-                string messageResult = message;
-
-                if (messageResult.Length > Extensions.MaxDebugLength)
-                {
-                    messageResult = message.Substring(0, Math.Min(message.Length, Extensions.MaxDebugLength)) + "...";
-                }
-
-                ((DNET.ITextChannel)Program.DiscordClient.GetChannel(593508765144186890))
-                    .SendMessageAsync((input ? "IN:" : "OUT:") + message.Length + "> " + messageResult);
-            }
-        }
-
-        #endregion Debug
-
         /// <summary>
         /// Get array field
         /// </summary>
@@ -101,12 +57,7 @@ namespace Drolez
                 ArraySegment<byte> buffer = new ArraySegment<byte>(array);
 
                 WebSocketReceiveResult result = socket.ReceiveAsync(buffer, token).GetAwaiter().GetResult();
-                string message = new string(buffer.ToArray().Where(part => part > 0).Select(part => (char)part).ToArray());
-
-                // Test channel, DEBUG out <---------------------------------------------------------------------------------------------------- Will nuke later
-                Extensions.XDEBUGOUT(true, message);
-
-                return message;
+                return new string(buffer.ToArray().Where(part => part > 0).Select(part => (char)part).ToArray());
             }
             catch (Exception)
             {
@@ -138,15 +89,21 @@ namespace Drolez
         /// Send text to specific client
         /// </summary>
         /// <param name="socket">Web socket client</param>
-        /// <param name="message">Message to send</param>
-        public static void Send(this WebSocket socket, string message)
+        /// <param name="eventMutator">Type of event</param>
+        /// <param name="data">Event data</param>
+        public static void Send(this WebSocket socket, string eventMutator, object data)
         {
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
-            socket.SendAsync(message.ToSegment(), WebSocketMessageType.Text, true, token);
 
-            // Test channel, DEBUG out <---------------------------------------------------------------------------------------------------- Will nuke later
-            Extensions.XDEBUGOUT(false, message);
+            Wrappers.Event jsonEvent = new Wrappers.Event()
+            {
+                Data = data,
+                DrolezEventMutationDescriptor = eventMutator
+            };
+
+            string message = jsonEvent.ToEventJSON();
+            socket.SendAsync(message.ToSegment(), WebSocketMessageType.Text, true, token);
         }
 
         /// <summary>

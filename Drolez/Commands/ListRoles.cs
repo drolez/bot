@@ -47,12 +47,12 @@
             if (parameters.Length > 1 && string.IsNullOrWhiteSpace(parameters[1]) && ulong.TryParse(parameters[1], out userId))
             {
                 // List roles for specific user
-                socket.Send(guild.GetUser(userId).Roles.Select(role => new Wrappers.Role(role)).ToJSON());
+                socket.Send("rolesList", guild.GetUser(userId).Roles.Select(role => new Wrappers.Role(role)));
                 return true;
             }
 
             // List all roles in guild
-            socket.Send(guild.Roles.Select(role => new Wrappers.Role(role)).ToJSON());
+            socket.Send("rolesList", guild.Roles.Select(role => new Wrappers.Role(role)));
             return true;
         }
     }

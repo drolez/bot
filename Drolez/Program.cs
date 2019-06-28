@@ -133,12 +133,34 @@ namespace Drolez
         public async Task MainAsync(string token)
         {
             Program.DiscordClient = new DW.DiscordSocketClient();
-            Program.DiscordClient.Log += this.Log;
+            Program.SetupDiscordEvents();
 
             await Program.DiscordClient.LoginAsync(DNET.TokenType.Bot, token);
             await Program.DiscordClient.StartAsync();
 
             await Task.Delay(-1);
+        }
+
+        /// <summary>
+        /// Guild changed
+        /// </summary>
+        /// <param name="guild">Guild that invoked event</param>
+        /// <param name="eventName">Event name</param>
+        /// <returns>Completed task</returns>
+        private static Task DiscordClientGuildChange(DW.SocketGuild guild, string eventName)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Role changed
+        /// </summary>
+        /// <param name="role">Role that invoked event</param>
+        /// <param name="eventName">Event name</param>
+        /// <returns>Completed task</returns>
+        private static Task DiscordClientRoleChange(DW.SocketRole role, string eventName)
+        {
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -151,7 +173,8 @@ namespace Drolez
 
             if (command == "ping")
             {
-                socket.Send("pong");
+                socket.Send("ping", "pong");
+                return;
             }
 
             if (command == null)
@@ -173,7 +196,7 @@ namespace Drolez
             }
             else if (!CommandHandler.IsRegistered(socket) || command.StartsWith("register/") || string.IsNullOrWhiteSpace(command))
             {
-                socket.Send(command == null ? "ERR:Recieve error, Check logs!" : "ERR:Invalid!");
+                socket.Send("error", command == null ? "Recieve error, Check logs!" : "Invalid!");
             }
             else
             {
@@ -183,9 +206,20 @@ namespace Drolez
                 }
                 catch (Exception ex)
                 {
-                    socket.Send("ERR:" + ex.Message.ToString());
+                    socket.Send("error", ex.Message.ToString());
                 }
             }
+        }
+
+        /// <summary>
+        /// Discord log
+        /// </summary>
+        /// <param name="message">The message</param>
+        /// <returns>Task result</returns>
+        private static Task Log(DNET.LogMessage message)
+        {
+            Console.WriteLine(message.ToString());
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -203,17 +237,38 @@ namespace Drolez
                 if (user != null && mutual > 0)
                 {
                     CommandHandler.ClientAdd(socket, user);
-                    socket.Send("true");
+                    socket.Send("auth_done", new Wrappers.User(user));
                 }
                 else if (mutual == 0)
                 {
-                    socket.Send("none");
-                }
-                else
-                {
-                    socket.Send("false");
+                    socket.Send("auth_done", null);
                 }
             }
+        }
+
+        /// <summary>
+        /// Setup discord events
+        /// </summary>
+        private static void SetupDiscordEvents()
+        {
+            Program.DiscordClient.Log += Program.Log;
+
+            // Bot was added to guild
+            Program.DiscordClient.GuildAvailable += (guild) => Program.DiscordClientGuildChange(guild, "guildJoined");
+            Program.DiscordClient.JoinedGuild += (guild) => Program.DiscordClientGuildChange(guild, "guildJoined");
+
+            // Bot was removed from guild
+            Program.DiscordClient.GuildUnavailable += (guild) => Program.DiscordClientGuildChange(guild, "guildLeft");
+            Program.DiscordClient.LeftGuild += (guild) => Program.DiscordClientGuildChange(guild, "guildLeft");
+
+            // New role was created
+            Program.DiscordClient.RoleCreated += (role) => Program.DiscordClientRoleChange(role, "roleCreated");
+
+            // Bot was removed from guild
+            Program.DiscordClient.RoleDeleted += (role) => Program.DiscordClientRoleChange(role, "roleDeleted");
+
+            // Bot was removed from guild
+            Program.DiscordClient.RoleUpdated += (old, updated) => Program.DiscordClientRoleChange(updated, "roleUpdated");
         }
 
         /// <summary>
@@ -251,17 +306,6 @@ namespace Drolez
 
             // Start websockets
             Task.Run(() => Program.Server.Listen(4555));
-        }
-
-        /// <summary>
-        /// Discord log
-        /// </summary>
-        /// <param name="message">The message</param>
-        /// <returns>Task result</returns>
-        private Task Log(DNET.LogMessage message)
-        {
-            Console.WriteLine(message.ToString());
-            return Task.CompletedTask;
         }
     }
 }
