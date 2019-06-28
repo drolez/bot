@@ -6,6 +6,10 @@ Written in C# for .NET core 2.2
 
 # Websocket Commands:
 
+Command return JSON format: **{"Data":object,"action":string}**<br>
+Example of error return: **{"Data":"Error message","action":"error"}**<br>
+Example of roles-list return: **{"Data":roleListJSONObject,"action":"rolesList"}**
+
 **auth/\<token>/\<TimeToLive(seconds)>**<br>
 Returns: true on success<br>
 Desc: On fail kicks client
@@ -27,12 +31,21 @@ Returns: Role for specified user in guild in a json format<br>
 Desc: On fail either returns "ERR:Empty!" or "ERR:Unknown!"
 
 **role-set/\<guildId>/\<roleJSON>**<br>
-Returns: if role ID is 0, command will create a new role, otherwise it modifies existing one<br>
+Result: if role ID is 0, command will create a new role, otherwise it modifies existing one<br>
 Desc: On fail either returns "ERR:Empty!" or "ERR:Unknown!"
 
 **role-remove/\<guildId>/\<roleId>**<br>
-Returns: Removes existing role<br>
+Result: Removes existing role<br>
+Desc: On fail either returns "ERR:Empty!" or "ERR:Unknown!"
+
+**role-set-path/\<guildId>/\<roleId>/\<path>**<br>
+Result: Changes directory path to the role (path eg.: */path/to/role/folder*)<br>
 Desc: On fail either returns "ERR:Empty!" or "ERR:Unknown!"
 
 **ping**<br>
 Returns: pong
+
+# Websocket Events:
+
+List of events that get send to connected clients:<br>
+**guildJoined**, **guildLeft**, **roleCreated**, **roleDeleted**, **roleUpdated**, **userLeft**
