@@ -63,7 +63,7 @@ Event JSON format:<br>
 Data can contain *Role*, *Guild*, *User* object<br>
 Action contains event name (see below).
 ```json
-{"Data":{"Identifier":0,,,,},"action":"userLeft"}
+{"Data":{"Identifier":0,"Avatar":"",},"action":"userLeft"}
 ```
 
 List of events that get send to connected clients:<br>
