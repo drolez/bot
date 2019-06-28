@@ -59,8 +59,6 @@
                     result = new StreamReader(response.GetResponseStream()).ReadToEnd();
                 }
 
-                Console.WriteLine(result);
-
                 // Get user info
                 DiscordUser user = JSON.JsonConvert.DeserializeObject<DiscordUser>(result);
 

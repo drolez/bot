@@ -156,9 +156,7 @@ namespace Drolez
 
             if (command.StartsWith("auth/") && command.Length > 5 && !CommandHandler.IsRegistered(socket))
             {
-                Console.WriteLine(command);
                 string tokenData = command.Substring(5);
-                Console.WriteLine(tokenData);
                 ulong userId = Auth.AuthenticateToken(tokenData, socket);
 
                 if (userId == 0)
