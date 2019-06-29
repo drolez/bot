@@ -4,7 +4,14 @@ This bot does management stuff, that Web API can't do.<br>
 This bot contains WebSockets server with SSL support for .NET core<br>
 Simple example of web dashboard using this bot: https://drolez.studio/ (shows only logged in user for now)
 
-Written in C# for .NET core 2.2
+Written in C# for .NET core 2.2<br>
+Bot tested on *Debian GNU/Linux 9*
+
+To run it after publishing go to the folder where you published it (Drolez.dll should be inside that folder) and run:<br>
+(You need to have dotnet installed)
+```
+dotnet Drolez.dll
+```
 
 Command/Event return JSON format:
 ```json
