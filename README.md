@@ -103,3 +103,20 @@ namespace Drolez.Commands
     }
 }
 ```
+
+# Config file
+
+Configuration file shoulde be named settings.xml and placed in the same folder as bot<br>
+File content:
+```xml
+<?xml version="1.0"?>
+<settings>
+	<Token>bot token</Token>
+	<CertificatePath>/absolute/path/to/certificate.pfx</CertificatePath>
+	<CertificatePassword>myCertificatePassword</CertificatePassword>
+	<DBServer>my.amazing.db</DBServer>
+	<DBName>myDB</DBName>
+	<DBUser>me</DBUser>
+	<DBPassword>myPassword</DBPassword>
+</settings>
+```
