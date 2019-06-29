@@ -1,15 +1,26 @@
 # Drolez bot
+# Created with love for Discord Hack Week
 This bot does management stuff, that Web API can't do.<br>
-This bot contains WebSockets server with SSL support for .NET core
+This bot contains WebSockets server with SSL support for .NET core<br>
+Web dashboard using this bot: https://drolez.studio/
 
 Written in C# for .NET core 2.2
 
-Command/Event return JSON format: **{"Data":object,"action":string}**<br>
+Command/Event return JSON format:
+```json
+{"Data":{},"action":""}
+```
 
 # Websocket Commands:
 
-Example of error return: **{"Data":"Error message","action":"error"}**<br>
-Example of roles-list return: **{"Data":roleListJSONObject,"action":"rolesList"}**
+Example of error return:
+```json
+{"Data":"Error message","action":"error"}
+```
+Example of roles-list return:
+```json
+{"Data":[{},{},,,,],"action":"rolesList"}
+```
 
 **auth/\<token>/\<TimeToLive(seconds)>**<br>
 Returns: true on success<br>
@@ -51,6 +62,44 @@ Returns: pong
 Event JSON format:<br>
 Data can contain *Role*, *Guild*, *User* object<br>
 Action contains event name (see below).
+```json
+{"Data":{"Identifier":0,"Avatar":"",},"action":"userLeft"}
+```
 
 List of events that get send to connected clients:<br>
 **guildJoined**, **guildLeft**, **roleCreated**, **roleDeleted**, **roleUpdated**, **userLeft**
+
+# Extensibility
+
+You can easilly add more commands to this bot.<br>
+By implementing **ICommand** interface and adding **CommandInfo** attribute to it.<br>
+Than just place it in the Commands folder, rebuild it and run!<br>
+Commands in **Drolez.Commands** namespace will load automatically on start-up.
+```C#
+namespace Drolez.Commands
+{
+    using System.Net.WebSockets;
+    using DW = Discord.WebSocket;
+
+    /// <summary>
+    /// string in the CommandInfo is the command name
+    /// </summary>
+    [CommandInfo("my-amazing-command")]
+    public class MyAmazingCommand : ICommand
+    {
+        /// <summary>
+        /// Run my amazing example command
+        /// </summary>
+        /// <param name="socket">Web socket</param>
+        /// <param name="user">Discord user who invoked this command</param>
+        /// <param name="parameters">Command parameters</param>
+        /// <returns>True on success</returns>
+        public bool Run(WebSocket socket, DW.SocketUser user, string[] parameters)
+        {
+            // First parameter is what client will see in Action parameter, second is and object (Data)
+            socket.Send("myAmazingCommand", "Hello");
+            return true;
+        }
+    }
+}
+```
