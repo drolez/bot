@@ -118,6 +118,7 @@ namespace Drolez
 
             while (true)
             {
+                DatabaseAccess.Connect(databaseSettings);
                 Program.SetupWebSockets();
 
                 // Start bot
