@@ -115,14 +115,18 @@ namespace Drolez
 
             // Setup environment
             CommandHandler.LoadCommands();
-            Program.SetupWebSockets();
 
-            // Start bot
-            new Program().MainAsync(botToken).GetAwaiter().GetResult();
+            while (true)
+            {
+                Program.SetupWebSockets();
 
-            // Stop server
-            Program.Server.Dispose();
-            DatabaseAccess.Close();
+                // Start bot
+                new Program().MainAsync(botToken).GetAwaiter().GetResult();
+
+                // Stop server
+                Program.Server.Dispose();
+                DatabaseAccess.Close();
+            }
         }
 
         /// <summary>
