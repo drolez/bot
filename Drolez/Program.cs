@@ -5,6 +5,7 @@ namespace Drolez
     using System.Net;
     using System.Net.WebSockets;
     using System.Security.Cryptography.X509Certificates;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Xml;
     using DNET = Discord;
@@ -274,19 +275,24 @@ namespace Drolez
             // Process incomming connections
             Program.Server.OnConnection += (sender, socket) =>
             {
-                while (socket.State < WebSocketState.Closed)
+                new Thread(() =>
                 {
-                    try
-                    {
-                        Program.DoSocketStuff(socket);
-                    }
-                    catch (Exception ex)
-                    {
-                        ex.ToString();
-                    }
-                }
+                    Thread.CurrentThread.IsBackground = true;
 
-                CommandHandler.ClientRemove(socket);
+                    while (socket.State < WebSocketState.Closed)
+                    {
+                        try
+                        {
+                            Program.DoSocketStuff(socket);
+                        }
+                        catch (Exception ex)
+                        {
+                            ex.ToString();
+                        }
+                    }
+
+                    CommandHandler.ClientRemove(socket);
+                }).Start();
             };
 
             // Log exceptions
