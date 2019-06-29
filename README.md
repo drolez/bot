@@ -132,3 +132,12 @@ File content:
 	<DBPassword>myPassword</DBPassword>
 </settings>
 ```
+
+# Database table
+
+Bot will look for a table named **RoleFolders**, that contains 3 columns:
+```
+bigint - "Id" - unsigned - default(0)
+text - "Folder"
+bigint - "Guildid" - unsigned - default(0)
+```
