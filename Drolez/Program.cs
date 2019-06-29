@@ -275,24 +275,19 @@ namespace Drolez
             // Process incomming connections
             Program.Server.OnConnection += (sender, socket) =>
             {
-                new Thread(() =>
+                while (socket.State < WebSocketState.Closed)
                 {
-                    Thread.CurrentThread.IsBackground = true;
-
-                    while (socket.State < WebSocketState.Closed)
+                    try
                     {
-                        try
-                        {
-                            Program.DoSocketStuff(socket);
-                        }
-                        catch (Exception ex)
-                        {
-                            ex.ToString();
-                        }
+                        Program.DoSocketStuff(socket);
                     }
+                    catch (Exception ex)
+                    {
+                        ex.ToString();
+                    }
+                }
 
-                    CommandHandler.ClientRemove(socket);
-                }).Start();
+                CommandHandler.ClientRemove(socket);
             };
 
             // Log exceptions
