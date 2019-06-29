@@ -13,6 +13,11 @@ To run it after publishing go to the folder where you published it (Drolez.dll s
 dotnet Drolez.dll
 ```
 
+To connect to bot over websockets use (you don't need :port if you have different forwarding):
+```
+wss://bot.adress:port
+```
+
 Command/Event return JSON format:
 ```json
 {"Data":{},"action":""}
