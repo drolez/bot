@@ -1,5 +1,6 @@
 ﻿namespace Drolez.Commands
 {
+    using System;
     using System.Linq;
     using System.Net.WebSockets;
     using DW = Discord.WebSocket;
@@ -44,7 +45,7 @@
 
             ulong userId = 0;
 
-            if (parameters.Length > 1 && string.IsNullOrWhiteSpace(parameters[1]) && ulong.TryParse(parameters[1], out userId))
+            if (parameters.Length > 1 && !string.IsNullOrWhiteSpace(parameters[1]) && ulong.TryParse(parameters[1], out userId))
             {
                 // List roles for specific user
                 socket.Send("rolesList", guild.GetUser(userId).Roles.Select(role => new Wrappers.Role(role)));

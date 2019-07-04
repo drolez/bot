@@ -30,8 +30,8 @@
         /// <param name="role">Discord role</param>
         public Role(DW.SocketRole role)
         {
-            this.GuildIdentifier = role.Guild.Id;
-            this.Identifier = role.Id;
+            this.GuildIdentifier = role.Guild.Id.ToString();
+            this.Identifier = role.Id.ToString();
             this.Name = role.Name;
             this.Color = new List<int> { role.Color.R, role.Color.G, role.Color.B };
             this.Permissions = role.Permissions;
@@ -59,12 +59,12 @@
         /// <summary>
         /// Gets or sets guild identifier
         /// </summary>
-        public ulong GuildIdentifier { get; set; }
+        public string GuildIdentifier { get; set; }
 
         /// <summary>
         /// Gets or sets identifier
         /// </summary>
-        public ulong Identifier { get; set; }
+        public string Identifier { get; set; }
 
         /// <summary>
         /// Gets or sets role name
@@ -129,11 +129,11 @@
                 }
             }
 
-            Role.UpdateDatabase(this.Identifier, this.Path, this.GuildIdentifier);
+            Role.UpdateDatabase(ulong.Parse(this.Identifier), this.Path, ulong.Parse(this.GuildIdentifier));
 
             if (guild != null)
             {
-                if (this.Identifier == 0)
+                if (this.Identifier == "0" || string.IsNullOrWhiteSpace(this.Identifier))
                 {
                     // Create role
                     DNET.Color? color = null;
@@ -149,7 +149,7 @@
                 else
                 {
                     // Modify role
-                    DW.SocketRole role = guild.GetRole(this.Identifier);
+                    DW.SocketRole role = guild.GetRole(ulong.Parse(this.Identifier));
 
                     if (role != null)
                     {

@@ -16,7 +16,7 @@
         /// <param name="admin">Is user administrator for this guild?</param>
         public Guild(DW.SocketGuild guild, bool admin)
         {
-            this.Identifier = guild.Id;
+            this.Identifier = guild.Id.ToString();
             this.Icon = guild.IconUrl;
             this.IconIdentifier = guild.IconId;
             this.MemberCount = guild.MemberCount;
@@ -42,7 +42,7 @@
         /// <summary>
         /// Gets or sets identifier
         /// </summary>
-        public ulong Identifier { get; set; }
+        public string Identifier { get; set; }
 
         /// <summary>
         /// Gets or sets member count
