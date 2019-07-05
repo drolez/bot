@@ -1,9 +1,8 @@
 # Drolez bot
-# Created with love for Discord Hack Week
 This bot does management stuff, that Web API can't do.<br>
-You can manage rolse with subfolders<br>
+You can manage roles with subfolders<br>
 This bot contains WebSockets server with SSL support for .NET core<br>
-Simple example of web dashboard using this bot: https://drolez.studio/ (shows only logged in user for now)
+Web dashboard using this bot: https://drolez.studio/ (shows only logged in user for now)
 
 Written in C# for .NET core 2.2<br>
 Bot tested on *Debian GNU/Linux 9*
@@ -36,7 +35,7 @@ Example of roles-list return:
 ```
 
 **auth/\<token>/\<TimeToLive(seconds)>**<br>
-Returns: true on success<br>
+Returns: Loged in user data on success<br>
 Desc: On fail kicks client
 
 **roles-list/\<guildId>**<br>
@@ -76,7 +75,7 @@ Event JSON format:<br>
 Data can contain *Role*, *Guild*, *User* object<br>
 Action contains event name (see below).
 ```json
-{"Data":{"Identifier":0,"Avatar":"",},"action":"userLeft"}
+{"Data":{"Identifier":"0","Avatar":"",},"action":"userLeft"}
 ```
 
 List of events that get send to connected clients:<br>
